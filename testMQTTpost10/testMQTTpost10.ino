@@ -5,18 +5,22 @@ EthernetClient ethClient;
 PubSubClient client(ethClient);
 /* НАСТРОЙКИ СЕТИ */
 byte mac[]    = {  0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED };
-IPAddress ip(192, 168, 0, 111);
-IPAddress server(188, 242, 123, 156);
-IPAddress gateway(192, 168, 0, 1);
-IPAddress myip;
+IPAddress ip(192, 168, 0, 111);//мой айпи адрес
+IPAddress server(188, 242, 123, 156);//внешний айпи сервера
+IPAddress gateway(192, 168, 0, 1);//router
+IPAddress myip;//айпи устройства есл и dhcp
 /* НАСТРОЙКИ СЕТИ КОНЕЦ*/
-
+/*
+ * КОНТРОЛЛЕР ПИШЕТ В СТАТУСЫ
+ * СЕРВЕР ПИШЕТ В ТРИГГЕРЫ
+ * 
+ */
 //Количество игровых и неигровых элементов, которыми необходимо управлять
-const int numberOfTasks = 5;
+const int numberOfTasks = 5;//количество заданий
 
-unsigned long started_at;
-int game_started;
-boolean game_power;
+unsigned long started_at;//когда началась игра
+int game_started;//статус игры( их 3)
+//boolean game_power;
 
 //Текущее стостояние загадки решена\не решена - изменяется контроллером
 byte statesGame[numberOfTasks];
@@ -27,9 +31,11 @@ byte last_statesGame[numberOfTasks];
     Т.е. триггер будет читаться кодом и, если надо, затираться.
     Смысл триггера заключается в описании воздействия интерфейса и игровой логики на дальнейший код
 */
-byte statesTriggers[numberOfTasks];
+byte statesTriggers[numberOfTasks];//триггеры заданий, сбрасываются после отработки
 
 //Имена топиков по количеству numberOfTasks
+//возвращает имя топика по номеру задания
+
 char* get_name(int num) {
   char* topic1;
   switch (num) {
@@ -78,8 +84,8 @@ char* get_name2(int num) {
   }
   return topic2;
 }
-/* Отправка статусов игры */
-boolean send_states(boolean start) {
+/* Отправка статусов игры в MQTT */
+boolean send_states(boolean start) {//
   boolean wasSent = 0;
   if(!start){
   for (int i = 0; i < numberOfTasks; i++) {
@@ -113,11 +119,13 @@ boolean send_states(boolean start) {
   return wasSent;
 }
 void compare_states_and_send() {
+  //общее сравнение, а затем в send_ проверяю каждое задание и отправляю, если надо
   if (statesGame != last_statesGame) {
     send_states(0);
   }
 }
 /* Отправка статусов игры КОНЕЦ*/
+//режим игры старт стоп сборка
 void sendGameState(){
   if(game_started==0){
      client.publish("podpol/states/game_now_state","0");
